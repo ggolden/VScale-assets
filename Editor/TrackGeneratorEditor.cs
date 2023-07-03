@@ -24,7 +24,7 @@ public class TrackGeneratorEditor : Editor
 
         if (GUILayout.Button("Generate"))
         {
-            trackGenerator.LayTrack(container);
+            trackGenerator.LayTrack(container, true);
         }
     }
 }

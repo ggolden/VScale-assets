@@ -7,31 +7,32 @@ public class TrackGenerator : MonoBehaviour
 {
     public int range = 300;
     public int segmentLength = 10;
-    public string assetPath = "Assets/VScaleAssets/Prefabs/track_10m_a.prefab";
-    public Object prefab;
-    public Vector3 trackPosition = Vector3.zero;
+    public Object sebmentPrefab;
 
-    public void LayTrack(GameObject container)
+    public void LayTrack(GameObject container, bool withUndo)
     {
+        // register an undo
+        //Undo.RegisterFullObjectHierarchyUndo(container, "Generate Track");
+
+        // clear
         for (int i = container.transform.childCount - 1; i >= 0; i--)
         {
-            DestroyImmediate(container.transform.GetChild(i).gameObject);
+            //DestroyImmediate(container.transform.GetChild(i).gameObject);
+            if (withUndo) Undo.DestroyObjectImmediate(container.transform.GetChild(i).gameObject);
         }
 
-        container.transform.position = trackPosition;
-
+        // lay
         for (int z = -range; z <= range; z += segmentLength)
         {
             GameObject segment = Segment(z, container);
+            if (withUndo) Undo.RegisterCreatedObjectUndo(segment, "Generate Track");
         }
-
-        Undo.RegisterCompleteObjectUndo(container, "Generate Track");
     }
 
     private GameObject Segment(int z, GameObject parent)
     {
         //Object prefab = AssetDatabase.LoadAssetAtPath(assetPath, typeof(GameObject));
-        GameObject segment = Instantiate(prefab, Vector3.zero, Quaternion.identity) as GameObject;
+        GameObject segment = Instantiate(sebmentPrefab, Vector3.zero, Quaternion.identity) as GameObject;
         segment.transform.position = new Vector3(0, 0, z);
         segment.transform.SetParent(parent.transform, false);
         segment.name = $"Track {z}";
@@ -42,7 +43,7 @@ public class TrackGenerator : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        LayTrack(gameObject, false);
     }
 
     // Update is called once per frame
