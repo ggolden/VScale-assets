@@ -1,6 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
+
+#if UNITY_EDITOR
+    using UnityEditor;
+#endif
+
 using UnityEngine;
 
 public class TrackGenerator : MonoBehaviour
@@ -9,29 +13,34 @@ public class TrackGenerator : MonoBehaviour
     public int segmentLength = 10;
     public Object sebmentPrefab;
 
-    public void LayTrack(GameObject container, bool withUndo)
+    public void GenerateTrack(GameObject container, bool withUndo)
     {
-        // register an undo
-        //Undo.RegisterFullObjectHierarchyUndo(container, "Generate Track");
-
         // clear
         for (int i = container.transform.childCount - 1; i >= 0; i--)
         {
-            //DestroyImmediate(container.transform.GetChild(i).gameObject);
-            if (withUndo) Undo.DestroyObjectImmediate(container.transform.GetChild(i).gameObject);
+            #if UNITY_EDITOR
+               if (withUndo) {
+                    Undo.DestroyObjectImmediate(container.transform.GetChild(i).gameObject);
+               } else {
+                    DestroyImmediate(container.transform.GetChild(i).gameObject);
+               }
+            #else
+                DestroyImmediate(container.transform.GetChild(i).gameObject);
+            #endif
         }
 
-        // lay
+        // generate
         for (int z = -range; z <= range; z += segmentLength)
         {
             GameObject segment = Segment(z, container);
-            if (withUndo) Undo.RegisterCreatedObjectUndo(segment, "Generate Track");
+            #if UNITY_EDITOR
+                if (withUndo) Undo.RegisterCreatedObjectUndo(segment, "Generate Track");
+            #endif
         }
     }
 
     private GameObject Segment(int z, GameObject parent)
     {
-        //Object prefab = AssetDatabase.LoadAssetAtPath(assetPath, typeof(GameObject));
         GameObject segment = Instantiate(sebmentPrefab, Vector3.zero, Quaternion.identity) as GameObject;
         segment.transform.position = new Vector3(0, 0, z);
         segment.transform.SetParent(parent.transform, false);
@@ -43,7 +52,7 @@ public class TrackGenerator : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        LayTrack(gameObject, false);
+        GenerateTrack(gameObject, false);
     }
 
     // Update is called once per frame
