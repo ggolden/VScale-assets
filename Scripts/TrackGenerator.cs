@@ -11,7 +11,7 @@ public class TrackGenerator : MonoBehaviour
 {
     public int range = 300;
     public int segmentLength = 10;
-    public Object sebmentPrefab;
+    public Object segmentPrefab;
 
     public void GenerateTrack(GameObject container, bool withUndo)
     {
@@ -41,7 +41,7 @@ public class TrackGenerator : MonoBehaviour
 
     private GameObject Segment(int z, GameObject parent)
     {
-        GameObject segment = Instantiate(sebmentPrefab, Vector3.zero, Quaternion.identity) as GameObject;
+        GameObject segment = Instantiate(segmentPrefab, Vector3.zero, Quaternion.identity) as GameObject;
         segment.transform.position = new Vector3(0, 0, z);
         segment.transform.SetParent(parent.transform, false);
         segment.name = $"Track {z}";
