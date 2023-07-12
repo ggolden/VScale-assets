@@ -2,10 +2,67 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum Plane
+{
+    XY,
+    ZY
+}
+
+public enum Facing
+{
+    XPlus,
+    XMinus
+}
+
 public class MeshBuilder
 {
     List<Vector3> verticies = new List<Vector3>();
     List<int> triangles = new List<int>();
+
+    public Vector3[] getVerticies() {
+        return verticies.ToArray();
+    }
+
+    public int[] getTriangles() {
+        return triangles.ToArray();
+    }
+
+    public int[] addFaceCircle(float radius, int divisions, Vector3 center, Plane plane, Facing facing) {
+        List<Vector3> points = new List<Vector3>();
+        points.Add(center);
+        for (int d = 0; d < divisions; d++) {
+            float a = d * 2 * Mathf.PI / (float) divisions;
+            if (plane == Plane.XY) {
+                points.Add(new Vector3(
+                    Mathf.Cos(a) * radius + center.x,
+                    Mathf.Sin(a) * radius + center.y,
+                    0            * radius + center.z));
+            } else {
+                points.Add(new Vector3(
+                    0            * radius + center.x,
+                    Mathf.Sin(a) * radius + center.y,
+                    Mathf.Cos(a) * radius + center.z));
+            }
+        }
+
+        List<int> indicies = addVerticies(points);
+
+
+        for (int d = 1; d < divisions; d++) {
+            if (facing == Facing.XPlus) {
+                addTriangle(indicies[d], indicies[0], indicies[d + 1]);
+            } else {
+                addTriangle(indicies[d+1], indicies[0], indicies[d]);
+            }
+        }
+        if (facing == Facing.XPlus) {
+            addTriangle(indicies[divisions], indicies[0], indicies[1]);
+        } else {
+            addTriangle(indicies[1], indicies[0], indicies[divisions]);
+        }
+
+        return indicies.ToArray();
+    }
 
     public void addFace4(Vector3[] faceVertices) {
         addTriangle(
@@ -28,9 +85,32 @@ public class MeshBuilder
         );
     }
 
+    public void addFace4i(int[] faceIndicies) {
+        addTriangle(
+            faceIndicies[0],
+            faceIndicies[1],
+            faceIndicies[2]
+        );
+        addTriangle(
+            faceIndicies[2],
+            faceIndicies[3],
+            faceIndicies[0]
+        );
+    }
+
+    public List<int> addVerticies(List<Vector3> v) {
+        List<int> rv = new List<int>();
+        foreach (Vector3 point in v)
+        {
+            int index = addVertex(point);
+            rv.Add(index);
+        }
+
+        return rv;
+    }
+
     public int addVertex(Vector3 vertex)
     {
-        // TODO: reuse the existing vertex in verticies if found
         int index = findVertex(vertex);
         if (index == -1) {
             verticies.Add(vertex);
@@ -46,6 +126,7 @@ public class MeshBuilder
         triangles.Add(c);
     }
 
+    // TODO: add some slack
     public int findVertex(Vector3 vertex) {
         for (int i = 0; i < verticies.Count; i++) {
             if (verticies[i].x == vertex.x
